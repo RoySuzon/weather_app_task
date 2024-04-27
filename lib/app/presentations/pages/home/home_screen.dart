@@ -1,9 +1,9 @@
-import 'package:flutter/cupertino.dart';
+import 'dart:developer';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:weather_app_task/app/controllers/api_controller.dart';
 import 'package:weather_app_task/app/models/current_weather_model.dart';
+import 'package:weather_app_task/app/models/forcastmodel.dart';
 import 'package:weather_app_task/app/utils/color_pallet.dart';
 import 'package:weather_app_task/app/utils/dimentions.dart';
 
@@ -17,11 +17,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool loading = false;
   late CurrentWeather currentWeather;
+  late ForcastModel forcastData;
 
   getWeather() async {
     loading = true;
     setState(() {});
-    currentWeather = await ApiController.getCurrentWeather();
+    currentWeather = await ApiController.getCurrentWeather("Kolkata");
+    forcastData = await ApiController.getForcastWeather();
     loading = false;
     setState(() {});
   }
@@ -58,23 +60,40 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Column(
                           children: [
                             Center(
-                                child:
-                                    Text(currentWeather.location?.name ?? "")),
-                            Center(
-                              child: IconButton(
-                                  onPressed: () {
-                                    ApiController.getCurrentWeather();
-                                  },
-                                  icon: const Icon(Icons.ads_click)),
+                                child: Text(
+                              currentWeather.location?.name ?? "",
+                              style: GoogleFonts.roboto(
+                                  fontSize: context.width(30),
+                                  fontWeight: FontWeight.bold),
+                            )),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                IconButton(
+                                    onPressed: () {
+                                      ApiController.getCurrentWeather(
+                                          "India");
+                                    },
+                                    icon: const Icon(Icons.ads_click)),
+                                Text(
+                               "Current Location",
+                                  style: GoogleFonts.roboto(
+                                      fontSize: context.width(14),
+                                      fontWeight: FontWeight.w300),
+                                )
+                              ],
                             ),
                             Padding(
-                              padding:  EdgeInsets.symmetric(horizontal: context.width(27)),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: context.width(27)),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
                                 children: [
                                   SizedBox(
-                                    width: context.width(170),
-                                    height: context.width(170),
+                                    width: context.width(130),
+                                    height: context.width(130),
                                     child: Image.asset(
                                       "assets/${currentWeather.current!.condition!.icon!.substring(20).toString()}",
                                       fit: BoxFit.cover,
@@ -83,13 +102,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Text(
                                     "${currentWeather.current!.tempC!.toStringAsFixed(0)}°",
                                     style: GoogleFonts.aDLaMDisplay(
-                                        fontSize: context.width(122)),
+                                        fontSize: context.width(100)),
                                   )
                                 ],
                               ),
                             )
                           ],
                         ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    height: context.width(100),
+                    child: ListView.builder(
+                      itemCount: forcastData.forecast!.forecastday?.length,
+                      scrollDirection: Axis.horizontal,
+                      itemBuilder: (context, index) => Padding(
+                        padding: EdgeInsets.only(right: index != 19 ? 10 : 0),
+                        child: Text(forcastData
+                            .forecast!.forecastday![index].astro!.sunrise
+                            .toString()),
                       ),
                     ),
                   ),
@@ -116,8 +148,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           top: 0,
                           width: context.width(50),
                           child: InkWell(
-                            onTap: () {
-                              getWeather();
+                            onTap: () async {
+                              // getWeather();
+
+                              final data =
+                                  await ApiController.getForcastWeather();
+
+                              log(data.current!.condition!.icon.toString());
+
+                              // print(data["forecast"]["forecastday"][0]["hour"][1]["condition"]["icon"]);
+
+                              // final dbt = await determinePosition();
+                              // log(dbt.latitude.toString());
                             },
                             child: Image.asset(
                               "assets/images/Ellipse 2.png",
