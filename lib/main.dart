@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:weather_app_task/app/presentations/pages/home/home_screen.dart';
 
 void main() {
@@ -11,14 +12,17 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Weather App',
       theme: ThemeData(
-        scaffoldBackgroundColor:const Color(0xff97ABFF) ,
+        scaffoldBackgroundColor: const Color(0xff97ABFF),
         colorScheme: ColorScheme.fromSeed(
-          brightness: Brightness.dark,
-          seedColor: const Color(0xff97ABFF)),
+            brightness: Brightness.dark, seedColor: const Color(0xff97ABFF)),
         useMaterial3: true,
       ),
       home: const HomeScreen(),

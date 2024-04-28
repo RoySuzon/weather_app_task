@@ -1,4 +1,4 @@
-import 'dart:convert';
+
 import 'dart:developer';
 import 'package:http/http.dart';
 import 'package:weather_app_task/app/models/current_weather_model.dart';
@@ -32,10 +32,10 @@ class ApiController {
   }
 
   ///==================== Get Forcast Weather [getForcastWeather] ===================
-  static Future<ForcastModel> getForcastWeather() async {
+  static Future<ForcastModel> getForcastWeather(String location) async {
     ForcastModel forcastModel = ForcastModel();
     final url = Uri.parse("$baseUrl/forecast.json")
-        .replace(queryParameters: {"q": "London", "days": "8"});
+        .replace(queryParameters: {"q": location, "days": "8"});
     log(url.toString());
     try {
       final response = await get(url, headers: header);
