@@ -7,7 +7,9 @@ import 'package:weather_app_task/app/presentations/pages/home/home_screen.dart';
 void main() async {
   runApp(const MyApp());
   await Hive.initFlutter();
-  await HiveBoxs().initBox();
+  await HiveBoxs.initBox();
+  // await Hive.openBox("currentWeather");
+  //   await Hive.openBox("forCast");
 }
 
 class MyApp extends StatelessWidget {

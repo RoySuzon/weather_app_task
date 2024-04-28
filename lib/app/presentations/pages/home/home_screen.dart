@@ -1,11 +1,11 @@
 // import 'dart:convert';
 import 'dart:developer';
-import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:weather_app_task/app/bloc/home/bloc/home_bloc.dart';
 import 'package:weather_app_task/app/controllers/api_controller.dart';
-import 'package:weather_app_task/app/domain/services/network_service.dart';
 import 'package:weather_app_task/app/models/current_weather_model.dart';
 import 'package:weather_app_task/app/models/forcastmodel.dart';
 import 'package:weather_app_task/app/presentations/widgets/custom_card.dart';
@@ -24,33 +24,34 @@ class _HomeScreenState extends State<HomeScreen> {
   final _pageController = PageController();
   final _forcastController = PageController();
   bool loading = false;
-  CurrentWeather currentWeather = CurrentWeather();
-  ForcastModel forcastData = ForcastModel();
+  // CurrentWeather currentWeather = CurrentWeather();
+  // ForcastModel forcastData = ForcastModel();
 
-  String location = "Dhaka";
+  // String location = "Dhaka";
+  final bloc = HomeBloc();
+  // getWeather() async {
+  //   loading = true;
+  //   setState(() {});
+  //   // await WeatherApiClient().getCurrentWeather(location).then((value) => currentWeather =  currentWeatherFromJson(value['data']));
+  //   // await WeatherApiClient().getForecastWeather(location).then((value) => forcastData =  forcastModelFromJson(value['data']));
+  //   if (await NetworkService.checkInternetConnectivity()) {
+  //     currentWeather = await ApiController.getCurrentWeather(location);
+  //     forcastData = await ApiController.getForcastWeather(location);
+  //     loading = false;
+  //   }
 
-  getWeather() async {
-    loading = true;
-    setState(() {});
-    // await WeatherApiClient().getCurrentWeather(location).then((value) => currentWeather =  currentWeatherFromJson(value['data']));
-    // await WeatherApiClient().getForecastWeather(location).then((value) => forcastData =  forcastModelFromJson(value['data']));
-    if (await NetworkService.checkInternetConnectivity()) {
-      currentWeather = await ApiController.getCurrentWeather(location);
-      forcastData = await ApiController.getForcastWeather(location);
-      loading = false;
-    }
-
-    setState(() {});
-  }
+  //   setState(() {});
+  // }
 
   @override
   void initState() {
+    bloc.add(HomeInitialEvent());
     // Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
     //   setState(() {
     //     _connectionStatus = result;
     //   });
     // });
-    getWeather();
+    // getWeather();
     super.initState();
   }
 
@@ -69,9 +70,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   AppColors.liniarColor2,
                   AppColors.liniarColor1,
                 ])),
-        child: loading == true
-            ? const Center(child: CircularProgressIndicator())
-            : SafeArea(
+        child: BlocBuilder<HomeBloc, HomeState>(
+          bloc: bloc,
+          builder: (context, state) {
+            if (state is HomeLoadingState) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is HomeSucessState) {
+              return SafeArea(
                 child: Column(
                   children: [
                     Expanded(
@@ -81,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Center(
                                 child: Text(
-                              currentWeather.location?.name ?? "",
+                              state.currentWeatherData.location?.name ?? "",
                               style: GoogleFonts.roboto(
                                   fontSize: context.width(30),
                                   fontWeight: FontWeight.bold),
@@ -105,26 +110,33 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
 
-                            _currentWeatherCard(context),
+                            _currentWeatherCard(context,state.currentWeatherData),
                             const Text("Partly Cloud  -  H:17o  L:4o"),
                             SizedBox(height: context.width(16)),
                             _forcastNextButton(context),
                             SizedBox(height: context.width(16)),
-                            _forcastCard(context, _forcastController),
+                            _forcastCard(context, _forcastController,state.forcastData),
                             // const Spacer(),
                           ],
                         ),
                       ),
                     ),
-                    _bottomCard(context)
+                    _bottomCard(context,state.currentWeatherData)
                   ],
                 ),
-              ),
+              );
+            } else if (state is HomeErrorState) {
+              return const SizedBox();
+            } else {
+              return const SizedBox();
+            }
+          },
+        ),
       ),
     );
   }
 
-  Widget _currentWeatherCard(BuildContext context) {
+  Widget _currentWeatherCard(BuildContext context,CurrentWeather currentWeather) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.width(27)),
       child: Row(
@@ -174,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _forcastCard(BuildContext context, PageController controller) {
+  Widget _forcastCard(BuildContext context, PageController controller,ForcastModel forcastData) {
     return SizedBox(
       height: context.width(150),
       child: Padding(
@@ -206,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _bottomCard(BuildContext context) {
+  Widget _bottomCard(BuildContext context,CurrentWeather currentWeather) {
     return SizedBox(
       height: context.width(250),
       child: Stack(

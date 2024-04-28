@@ -7,9 +7,20 @@ final class HomeInitial extends HomeState {}
 
 class HomeLoadingState extends HomeState {}
 
-class HomeSucessState extends HomeState {}
+class HomeSucessState extends HomeState {
+  final CurrentWeather currentWeatherData;
+  final ForcastModel forcastData;
 
-class HomeErrorState extends HomeState {}
+  HomeSucessState(
+      {required this.currentWeatherData, required this.forcastData});
+}
+
+class HomeErrorState extends HomeState {
+  final String? message;
+  final String? stackTrace;
+
+  HomeErrorState({this.message, this.stackTrace});
+}
 
 // enum BlocState { initial, loading, success, error }
 

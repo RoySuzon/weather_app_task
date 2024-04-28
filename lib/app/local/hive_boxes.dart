@@ -1,7 +1,7 @@
 import 'package:hive/hive.dart';
 
 class HiveBoxs {
-  initBox() async {
+ static Future<void> initBox() async {
     await Hive.openBox<dynamic>("currentWeather");
     await Hive.openBox<dynamic>("forCast");
   }

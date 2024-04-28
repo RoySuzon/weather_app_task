@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart' as http;
+import 'package:weather_app_task/app/local/hive_boxes.dart';
 import 'package:weather_app_task/app/models/current_weather_model.dart';
 import 'package:weather_app_task/app/models/forcastmodel.dart';
 
@@ -17,10 +19,14 @@ class ApiController {
     log(url.toString());
     try {
       final response = await http.get(url, headers: header);
-      log(response.body);
+      // log(response.body);
       if (response.statusCode == 200) {
+        await HiveBoxs.currentWeatherBox
+            .put(0, response.body)
+            .then((value) => log('SyncDone.....'));
+
         currentWeather = currentWeatherFromJson(response.body);
-        log(currentWeather.location!.name.toString());
+        // log(currentWeather.location!.name.toString());
       }
       // return currentWeather;
     } catch (e, s) {
@@ -38,11 +44,13 @@ class ApiController {
     log(url.toString());
     try {
       final response = await http.get(url, headers: header);
-      forcastModel = forcastModelFromJson(response.body);
-      // log(forcastModelToJson(data));
-      // log(response.body);
-      // log(response.body);
-      // return jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        await HiveBoxs.forCastBox
+            .put(0, response.body)
+            .then((value) => log('SyncDone.....'));
+            
+        forcastModel = forcastModelFromJson(response.body);
+      }
     } catch (e) {
       log(e.toString());
     }
