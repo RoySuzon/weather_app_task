@@ -23,7 +23,7 @@ class CustomRoundTextButton extends StatelessWidget {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(context.width(100)),
         ),
-        padding:  EdgeInsets.symmetric(horizontal: context.width(5), vertical: 10.0),
+        // padding:  EdgeInsets.symmetric(horizontal: context.width(5), vertical: 10.0),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),

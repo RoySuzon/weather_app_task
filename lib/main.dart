@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:weather_app_task/app/local/hive_boxes.dart';
 import 'package:weather_app_task/app/presentations/pages/home/home_screen.dart';
 
-void main() {
+void main() async {
   runApp(const MyApp());
+  await Hive.initFlutter();
+  await HiveBoxs().initBox();
 }
 
 class MyApp extends StatelessWidget {

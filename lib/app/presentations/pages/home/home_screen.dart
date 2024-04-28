@@ -1,8 +1,11 @@
+// import 'dart:convert';
 import 'dart:developer';
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:weather_app_task/app/controllers/api_controller.dart';
+import 'package:weather_app_task/app/domain/services/network_service.dart';
 import 'package:weather_app_task/app/models/current_weather_model.dart';
 import 'package:weather_app_task/app/models/forcastmodel.dart';
 import 'package:weather_app_task/app/presentations/widgets/custom_card.dart';
@@ -21,22 +24,32 @@ class _HomeScreenState extends State<HomeScreen> {
   final _pageController = PageController();
   final _forcastController = PageController();
   bool loading = false;
-  late CurrentWeather currentWeather;
-  late ForcastModel forcastData;
+  CurrentWeather currentWeather = CurrentWeather();
+  ForcastModel forcastData = ForcastModel();
 
-  String location = "Bangladesh";
+  String location = "Dhaka";
 
   getWeather() async {
     loading = true;
     setState(() {});
-    currentWeather = await ApiController.getCurrentWeather(location);
-    forcastData = await ApiController.getForcastWeather(location);
-    loading = false;
+    // await WeatherApiClient().getCurrentWeather(location).then((value) => currentWeather =  currentWeatherFromJson(value['data']));
+    // await WeatherApiClient().getForecastWeather(location).then((value) => forcastData =  forcastModelFromJson(value['data']));
+    if (await NetworkService.checkInternetConnectivity()) {
+      currentWeather = await ApiController.getCurrentWeather(location);
+      forcastData = await ApiController.getForcastWeather(location);
+      loading = false;
+    }
+
     setState(() {});
   }
 
   @override
   void initState() {
+    // Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
+    //   setState(() {
+    //     _connectionStatus = result;
+    //   });
+    // });
     getWeather();
     super.initState();
   }
@@ -127,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           Text(
-            "${(currentWeather.current!.tempC!-6).toStringAsFixed(0)}°",
+            "${(currentWeather.current!.tempC! - 6).toStringAsFixed(0)}°",
             style: GoogleFonts.aDLaMDisplay(fontSize: context.width(80)),
           )
         ],
@@ -152,7 +165,7 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(
             width: context.width(120),
             child: CustomRoundTextButton(
-              text: "NextDay",
+              text: "Next Days",
               onPressed: () {},
             ),
           )
@@ -180,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: CustomCardButton(
               icon:
                   "assets/${forcastData.forecast!.forecastday![0].hour![index].condition!.icon!.substring(21).toString()}",
-              heading: DateFormat("hh:mm a").format(DateTime.parse(forcastData
+              heading: DateFormat("ha").format(DateTime.parse(forcastData
                   .forecast!.forecastday![0].hour![index].time
                   .toString())),
               subtitle:
@@ -272,7 +285,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 Text(
                                   DateFormat("h:mm a").format(DateTime.parse(
-                                      currentWeather.location!.localtime.toString())).toLowerCase(),
+                                      currentWeather.location!.localtimeEpoch!
+                                          .toStringAsFixed(0))),
                                   style: GoogleFonts.alata(
                                       fontSize: context.width(20),
                                       fontWeight: FontWeight.w500,
