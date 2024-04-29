@@ -2,10 +2,12 @@
 import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:weather_app_task/app/bloc/home/bloc/home_bloc.dart';
 import 'package:weather_app_task/app/controllers/api_controller.dart';
+import 'package:weather_app_task/app/controllers/get_location.dart';
 import 'package:weather_app_task/app/models/current_weather_model.dart';
 import 'package:weather_app_task/app/models/forcastmodel.dart';
 import 'package:weather_app_task/app/presentations/widgets/custom_card.dart';
@@ -24,119 +26,168 @@ class _HomeScreenState extends State<HomeScreen> {
   final _pageController = PageController();
   final _forcastController = PageController();
   bool loading = false;
-  // CurrentWeather currentWeather = CurrentWeather();
-  // ForcastModel forcastData = ForcastModel();
-
-  // String location = "Dhaka";
   final bloc = HomeBloc();
-  // getWeather() async {
-  //   loading = true;
-  //   setState(() {});
-  //   // await WeatherApiClient().getCurrentWeather(location).then((value) => currentWeather =  currentWeatherFromJson(value['data']));
-  //   // await WeatherApiClient().getForecastWeather(location).then((value) => forcastData =  forcastModelFromJson(value['data']));
-  //   if (await NetworkService.checkInternetConnectivity()) {
-  //     currentWeather = await ApiController.getCurrentWeather(location);
-  //     forcastData = await ApiController.getForcastWeather(location);
-  //     loading = false;
-  //   }
 
-  //   setState(() {});
-  // }
+  String? location;
+  Future<void> getLocation() async {
+    final position = await determinePosition();
+    location = "${position.latitude},${position.longitude}";
+    log(position.latitude.toString());
+  }
 
   @override
   void initState() {
-    bloc.add(HomeInitialEvent());
-    // Connectivity().onConnectivityChanged.listen((ConnectivityResult result) {
-    //   setState(() {
-    //     _connectionStatus = result;
-    //   });
-    // });
-    // getWeather();
+    getLocation()
+        .then((value) => bloc.add(HomeInitialEvent(location: location)));
+
     super.initState();
+  }
+
+  Future<void> _refreshData() async {
+    await Future.delayed(const Duration(seconds: 2));
+    bloc.add(HomeInitialEvent(location: "Dhaka"));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-            color: AppColors.liniarColor1,
-            gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                tileMode: TileMode.mirror,
-                // transform: GradientRotation(1),
-                colors: [
-                  AppColors.liniarColor2,
-                  AppColors.liniarColor1,
-                ])),
-        child: BlocBuilder<HomeBloc, HomeState>(
-          bloc: bloc,
-          builder: (context, state) {
-            if (state is HomeLoadingState) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is HomeSucessState) {
-              return SafeArea(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Center(
-                                child: Text(
-                              state.currentWeatherData.location?.name ?? "",
-                              style: GoogleFonts.roboto(
-                                  fontSize: context.width(30),
-                                  fontWeight: FontWeight.bold),
-                            )),
-                            SizedBox(height: context.width(16)),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                IconButton(
-                                    onPressed: () {
-                                      ApiController.getCurrentWeather("India");
-                                    },
-                                    icon: const Icon(Icons.ads_click)),
-                                Text(
-                                  "Current Location",
-                                  style: GoogleFonts.roboto(
-                                      fontSize: context.width(14),
-                                      fontWeight: FontWeight.w300),
-                                )
-                              ],
-                            ),
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: Container(
+          decoration: const BoxDecoration(
+              color: AppColors.liniarColor1,
+              gradient: LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  tileMode: TileMode.mirror,
+                  // transform: GradientRotation(1),
+                  colors: [
+                    AppColors.liniarColor2,
+                    AppColors.liniarColor1,
+                  ])),
+          child: BlocBuilder<HomeBloc, HomeState>(
+            bloc: bloc,
+            builder: (context, state) {
+              if (state is HomeLoadingState) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is HomeSucessState) {
+                return SafeArea(
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(height: context.width(16)),
+                              Center(
+                                  child: Text(
+                                state.currentWeatherData.location?.name ?? "",
+                                style: GoogleFonts.roboto(
+                                    fontSize: context.width(30),
+                                    fontWeight: FontWeight.bold),
+                              )),
+                              Center(
+                                  child: Text(
+                                state.currentWeatherData.location!.country
+                                    .toString(),
+                                style: GoogleFonts.roboto(
+                                    fontSize: context.width(18),
+                                    fontWeight: FontWeight.bold),
+                              )),
+                              // SizedBox(height: context.width(16)),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                      onPressed: () {
+                                        getLocation().then((value) => bloc.add(
+                                            HomeInitialEvent(
+                                                location: location)));
+                                      },
+                                      icon: const Icon(Icons.ads_click)),
+                                  Text(
+                                    "Current Location",
+                                    style: GoogleFonts.roboto(
+                                        fontSize: context.width(14),
+                                        fontWeight: FontWeight.w300),
+                                  )
+                                ],
+                              ),
 
-                            _currentWeatherCard(context,state.currentWeatherData),
-                            const Text("Partly Cloud  -  H:17o  L:4o"),
-                            SizedBox(height: context.width(16)),
-                            _forcastNextButton(context),
-                            SizedBox(height: context.width(16)),
-                            _forcastCard(context, _forcastController,state.forcastData),
-                            // const Spacer(),
-                          ],
+                              _currentWeatherCard(
+                                  context, state.currentWeatherData),
+                              Text(
+                                  "${state.currentWeatherData.current!.condition!.text} - H:17o  L:4o"),
+                              SizedBox(height: context.width(16)),
+                              _forcastNextButton(context),
+                              SizedBox(height: context.width(16)),
+                              _forcastCard(context, _forcastController,
+                                  state.forcastData),
+                              // const Spacer(),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    _bottomCard(context,state.currentWeatherData)
-                  ],
-                ),
-              );
-            } else if (state is HomeErrorState) {
-              return const SizedBox();
-            } else {
-              return const SizedBox();
-            }
-          },
+                      _bottomCard(
+                          context, state.currentWeatherData, state.forcastData)
+                    ],
+                  ),
+                );
+              } else if (state is HomeErrorState) {
+                return Center(
+                  child: _warningCard(context, state),
+                );
+              } else {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+            },
+          ),
         ),
       ),
     );
   }
 
-  Widget _currentWeatherCard(BuildContext context,CurrentWeather currentWeather) {
+  Widget _warningCard(BuildContext context, HomeErrorState state) {
+    return Padding(
+      padding: EdgeInsets.all(context.width(20)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.warning,
+            size: context.width(50),
+            color: Colors.red,
+          ),
+          SizedBox(height: context.width(20)),
+          Text(
+            'An error occurred:',
+            style: TextStyle(fontSize: context.width(18)),
+          ),
+          SizedBox(height: context.width(10)),
+          Text(
+            state.message!,
+            style: TextStyle(fontSize: context.width(16)),
+          ),
+          SizedBox(height: context.width(20)),
+          ElevatedButton(
+            // style: ButtonStyle(backgroundColor: MaterialStateProperty.all(Colors.black38)),
+            onPressed: () {
+              bloc.add(HomeInitialEvent());
+            },
+            child: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _currentWeatherCard(
+      BuildContext context, CurrentWeather currentWeather) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: context.width(27)),
       child: Row(
@@ -186,7 +237,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _forcastCard(BuildContext context, PageController controller,ForcastModel forcastData) {
+  Widget _forcastCard(BuildContext context, PageController controller,
+      ForcastModel forcastData) {
     return SizedBox(
       height: context.width(150),
       child: Padding(
@@ -218,7 +270,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _bottomCard(BuildContext context,CurrentWeather currentWeather) {
+  Widget _bottomCard(BuildContext context, CurrentWeather currentWeather,
+      ForcastModel forcastModel) {
     return SizedBox(
       height: context.width(250),
       child: Stack(
@@ -243,11 +296,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: InkWell(
               onTap: () async {
                 // getWeather();
+                bloc.add(HomeInitialEvent(location: "Bangladesh"));
+                // final data =
+                //     await ApiController.getForcastWeather("Bangladesh");
 
-                final data =
-                    await ApiController.getForcastWeather("Bangladesh");
-
-                log(data.current!.condition!.icon.toString());
+                // log(data.current!.condition!.icon.toString());
               },
               child: Image.asset(
                 "assets/images/Ellipse 2.png",
@@ -263,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 controller: _pageController,
                 padding: EdgeInsets.zero,
                 // scrollDirection: Axis.vertical,
-                itemCount: 3,
+                itemCount: forcastModel.forecast!.forecastday!.length,
                 itemBuilder: (context, index) {
                   return Container(
                     margin:
@@ -296,9 +349,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       color: AppColors.white),
                                 ),
                                 Text(
-                                  DateFormat("h:mm a").format(DateTime.parse(
-                                      currentWeather.location!.localtimeEpoch!
-                                          .toStringAsFixed(0))),
+                                  forcastModel.forecast?.forecastday?[index]
+                                          .astro?.sunset ??
+                                      "",
                                   style: GoogleFonts.alata(
                                       fontSize: context.width(20),
                                       fontWeight: FontWeight.w500,
@@ -320,7 +373,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                       color: AppColors.white),
                                 ),
                                 Text(
-                                  "5.51am",
+                                  forcastModel.forecast?.forecastday?[index]
+                                          .astro?.sunrise ??
+                                      "",
                                   style: GoogleFonts.alata(
                                       fontSize: context.width(20),
                                       fontWeight: FontWeight.w500,
