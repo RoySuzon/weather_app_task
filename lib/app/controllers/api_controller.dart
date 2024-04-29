@@ -21,8 +21,8 @@ class ApiController {
       final response = await http.get(url, headers: header);
       // log(response.body);
       if (response.statusCode == 200) {
-        await HiveBoxs.currentWeatherBox
-            .put(0, response.body)
+        await HiveBoxs.currentWeather
+            .put("currentWeather", response.body)
             .then((value) => log('SyncDone.....'));
 
         currentWeather = currentWeatherFromJson(response.body);
@@ -45,8 +45,8 @@ class ApiController {
     try {
       final response = await http.get(url, headers: header);
       if (response.statusCode == 200) {
-        await HiveBoxs.forCastBox
-            .put(0, response.body)
+        await HiveBoxs.forCast
+            .put("forCast", response.body)
             .then((value) => log('SyncDone.....'));
             
         forcastModel = forcastModelFromJson(response.body);
@@ -58,35 +58,35 @@ class ApiController {
   }
 }
 
-class WeatherApiClient {
-  static const String _baseUrl = "http://api.weatherapi.com/v1";
-  static const String _apiKey = "ed4e0f0b212346a3840202051242604";
+// class WeatherApiClient {
+//   static const String _baseUrl = "http://api.weatherapi.com/v1";
+//   static const String _apiKey = "ed4e0f0b212346a3840202051242604";
 
-  Future<Map<String, dynamic>> _get(String path,
-      {Map<String, String>? params}) async {
-    try {
-      final url = Uri.parse("$_baseUrl$path").replace(queryParameters: params);
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        return {"success": true, "data": response.body};
-      } else {
-        return {
-          "success": false,
-          "error": "Failed to fetch data: ${response.statusCode}"
-        };
-      }
-    } catch (e) {
-      return {"success": false, "error": "Exception: $e"};
-    }
-  }
+//   Future<Map<String, dynamic>> _get(String path,
+//       {Map<String, String>? params}) async {
+//     try {
+//       final url = Uri.parse("$_baseUrl$path").replace(queryParameters: params);
+//       final response = await http.get(url);
+//       if (response.statusCode == 200) {
+//         return {"success": true, "data": response.body};
+//       } else {
+//         return {
+//           "success": false,
+//           "error": "Failed to fetch data: ${response.statusCode}"
+//         };
+//       }
+//     } catch (e) {
+//       return {"success": false, "error": "Exception: $e"};
+//     }
+//   }
 
-  Future<Map<String, dynamic>> getCurrentWeather(String location) async {
-    final params = {"q": location, "aqi": "yes", "key": _apiKey};
-    return await _get("/current.json", params: params);
-  }
+//   Future<Map<String, dynamic>> getCurrentWeather(String location) async {
+//     final params = {"q": location, "aqi": "yes", "key": _apiKey};
+//     return await _get("/current.json", params: params);
+//   }
 
-  Future<Map<String, dynamic>> getForecastWeather(String location) async {
-    final params = {"q": location, "days": "8", "key": _apiKey};
-    return await _get("/forecast.json", params: params);
-  }
-}
+//   Future<Map<String, dynamic>> getForecastWeather(String location) async {
+//     final params = {"q": location, "days": "8", "key": _apiKey};
+//     return await _get("/forecast.json", params: params);
+//   }
+// }

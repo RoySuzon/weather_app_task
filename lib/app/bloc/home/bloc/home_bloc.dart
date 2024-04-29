@@ -30,18 +30,17 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             currentWeatherData: HomeRepository.currentWeather,
             forcastData: HomeRepository.forcastModel));
       } else {
-        if (HiveBoxs.currentWeatherBox.isNotEmpty &&
-            HiveBoxs.forCastBox.isNotEmpty) {
-        // print('object');
-        log(HiveBoxs.currentWeatherBox.get(0));
-        emit(HomeSucessState(
-            currentWeatherData: currentWeatherFromJson(
-                jsonEncode(HiveBoxs.currentWeatherBox.get(0).toString())),
-            forcastData:
-                forcastModelFromJson(jsonEncode(HiveBoxs.forCastBox.get(0)))));
-        // } else {
-        //   emit(HomeErrorState(
-        //       message: "Please check the internet connection and try again!"));
+        if (HiveBoxs.currentWeather.isNotEmpty && HiveBoxs.forCast.isNotEmpty) {
+          // print('object');
+          // log(HiveBoxs.currentWeather.get("currentWeather"));
+          emit(HomeSucessState(
+              currentWeatherData: currentWeatherFromJson(
+                  await HiveBoxs.currentWeather.get("currentWeather")),
+              forcastData:
+                  forcastModelFromJson(await HiveBoxs.forCast.get("forCast"))));
+          // } else {
+          //   emit(HomeErrorState(
+          //       message: "Please check the internet connection and try again!"));
         }
       }
     });
